@@ -1,0 +1,92 @@
+h1, h2 {
+    text-align: center;
+    color: darkgreen; /* Added font color */
+    font-size: 2.5em; /* Increased font size for headings */
+}
+
+h3 {
+    font-size: 1.8em; /* Increased font size for subheadings */
+}
+
+body {
+    background-color: aliceblue;
+    font-family: 'Roboto', sans-serif; /* Changed font family to Roboto */
+    color: black;
+    margin: 20px; /* Added some margin around the body */
+    font-size: 1.1em; /* Increased default font size */
+}
+
+img {
+    width: 400px;
+    height: auto; /* Maintain aspect ratio */
+    display: block; /* Centers the image using margin auto on the parent (center tag) */
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 8px; /* Added a slight border radius for softer edges */
+    box-shadow: 2px 2px 5px #888888; /* Added a subtle shadow */
+}
+
+.header-container {
+    background-color: #f0fff0; /* Light green background */
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    box-shadow: 1px 1px 3px #ccc;
+}
+
+.list-container {
+    background-color: #e0f8e0; /* Another light green shade */
+    padding: 15px;
+    margin-top: 20px;
+    border-radius: 5px;
+    list-style-type: square; /* Example of styling the list container */
+}
+
+.strengths-container {
+    background-color: #e0f8e0; /* Same light green shade as the reasons section */
+    padding: 15px;
+    margin-top: 20px;
+    border-radius: 5px;
+}
+
+ol {
+    list-style-type: decimal; /* Explicitly set the ordered list style */
+    padding-left: 20px;
+}
+
+ul {
+    list-style-type: disc; /* Changed to disc for the "mini" bullet points - filled circle */
+    padding-left: 30px;
+    font-size: 1em; /* Adjusted nested list font size to be slightly larger */
+    color: #555; /* Darker gray color for nested list */
+}
+
+iframe {
+    display: block;
+    margin-top: 20px; /* Keep top margin */
+    margin-bottom: 20px; /* Keep bottom margin */
+    margin-left: 20px; /* Align to the left */
+    margin-right: 0; /* Remove right margin for centering */
+    border: 1px solid #ccc; /* Add a border to the iframe */
+}
+
+.tableauPlaceholder {
+    margin-top: 20px;
+}
+
+/* Styles to make links look like regular text */
+a {
+    text-decoration: none; /* Removes the underline */
+    color: inherit;        /* Makes the link the same color as its parent text */
+}
+
+/* Optional: Add visual cues on hover and focus for accessibility */
+a:hover {
+    text-decoration: underline; /* You might want to add an underline on hover */
+    /* color: darkgreen; You could change the color on hover */
+}
+
+a:focus {
+    outline: 2px solid darkgreen; /* Adds an outline for accessibility */
+    outline-offset: 2px;
+}

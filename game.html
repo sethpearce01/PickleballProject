@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shrek Emoji Matching Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet"> <style>
+        /* Custom styles for the game */
+        body {
+            font-family: 'Inter', sans-serif; /* Default font */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #d4e9d6; /* Swampy green background */
+            overflow: hidden; /* Hide confetti overflow initially */
+            position: relative; /* Needed for absolute positioning of effects */
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: #f5f5dc; /* Beige/Parchment color */
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            border: 3px solid #8b4513; /* Brown border */
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+            color: #556b2f;
+            font-weight: bold;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr); /* 5 columns */
+            gap: 10px; /* Spacing between cards */
+            perspective: 1000px; /* For 3D flip effect */
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 8px;
+            background-color: #c1e1c1; /* Lighter swamp green */
+            transition: background-color 0.3s ease; /* Transition for green flash */
+        }
+
+        .card {
+            width: 70px; /* Card width */
+            height: 90px; /* Card height */
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .card.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden; /* Hide the back side when facing forward */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 36px; /* Emoji size */
+            border-radius: 8px;
+            overflow: hidden; /* Ensure content stays within rounded corners */
+        }
+
+        .card-front {
+            background-color: #556b2f; /* Dark Olive Green card front */
+            color: white;
+             /* Optional: Add a subtle pattern or icon */
+             background-image: url("data:image/svg+xml,%3Csvg width='6' height='6' viewBox='0 0 6 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.1' fill-rule='evenodd'%3E%3Cpath d='M5 0h1L0 6V5zM6 5v1H5z'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .card-back {
+            background-color: #fff8dc; /* Cornsilk back */
+            color: #334155; /* Dark text color */
+            transform: rotateY(180deg); /* Initially hidden */
+            border: 1px solid #a0522d; /* Sienna border */
+        }
+
+        /* Message Area Styling */
+        .message-area {
+            height: 50px; /* Fixed height to prevent layout shifts */
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #556b2f; /* Dark Olive Green text */
+            text-align: center;
+        }
+
+        /* Effect Styling */
+        .effect-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none; /* Allow clicks through the overlay */
+            z-index: 10;
+            opacity: 0; /* Hidden by default */
+            transition: opacity 0.5s ease-out;
+        }
+
+        .wahoo-text {
+            font-family: 'Press Start 2P', cursive; /* Arcade font */
+            font-size: 4rem;
+            color: #228b22; /* Forest Green */
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            /* --- MODIFIED CSS: Increased duration --- */
+            animation: burst 1.6s ease-out forwards;
+        }
+
+        /* Burst Animation */
+        @keyframes burst {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 0; } /* Fade out at the end */
+        }
+
+        /* Confetti Styling */
+        .confetti-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: red; /* Will be randomized */
+            opacity: 0.7;
+            border-radius: 2px;
+            animation: fall 5s linear infinite;
+        }
+
+        /* Confetti Fall Animation */
+        @keyframes fall {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* Winner Message Styling - UPDATED */
+        .winner-message {
+            font-family: 'Press Start 2P', cursive; /* Arcade font */
+            font-size: 3.5rem; /* Increased font size */
+            color: #4169E1; /* Royal Blue color */
+            text-align: center;
+            margin-top: 20px;
+            animation: pulse 1.5s infinite;
+            line-height: 1.2; /* Adjust line height for larger font */
+            text-shadow: 1px 1px 2px #8b4513; /* Brown shadow */
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+
+        /* Button Styling */
+        .reset-button {
+            font-family: 'Press Start 2P', cursive;
+            background: linear-gradient(to bottom, #90ee90, #3cb371); /* Light/Medium green gradient */
+            color: #4b5320; /* Army green text */
+            padding: 10px 20px;
+            border: 2px solid #556b2f; /* Dark olive border */
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+            margin-top: 15px;
+            text-shadow: 1px 1px 1px rgba(255,255,255,0.3);
+        }
+        .reset-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+            filter: brightness(1.1);
+        }
+        .reset-button:active {
+             transform: translateY(0px);
+             box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 450px) {
+            .game-board {
+                grid-template-columns: repeat(4, 1fr); /* 4 columns on smaller screens */
+            }
+            .card {
+                width: 60px;
+                height: 80px;
+                font-size: 30px;
+            }
+             .wahoo-text {
+                font-size: 3rem;
+            }
+            .winner-message {
+                font-size: 2.5rem; /* Adjusted responsive size */
+            }
+        }
+         @media (max-width: 380px) {
+             .card {
+                width: 50px;
+                height: 70px;
+                font-size: 24px;
+            }
+             .game-board {
+                 gap: 5px;
+            }
+             .winner-message {
+                 font-size: 2rem; /* Further adjusted responsive size */
+            }
+        }
+
+        /* Donkey Flash Styling */
+        #donkey-flash {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 0, 0.8); /* Yellow background */
+            color: #8b4513; /* Brown text */
+            font-family: 'Press Start 2P', cursive;
+            font-size: 5rem;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 50;
+            display: none; /* Initially hidden using display: none */
+            transition: opacity 0.3s ease-in-out; /* We might not need opacity transition anymore */
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div style="position: absolute; top: 10px; right: 10px; z-index: 30;">
+        <a href="pickleball.html">Visit Pickleball Page</a>
+    </div>
+    <div class="game-container">
+        <h1 class="text-3xl font-bold mb-4 text-center" style="color: #556b2f;">Shrek Emoji Match!</h1>
+        <div class="game-info">
+            <div id="timer">Time: 0s</div>
+            <div id="score">Score: 1000</div>
+        </div>
+        <div class="message-area" id="message-area">Select two cards</div>
+        <div class="game-board" id="game-board">
+            </div>
+        <div class="effect-overlay" id="effect-overlay">
+            <span id="wahoo-text" class="wahoo-text">Wahoo!!!</span>
+        </div>
+         <div class="confetti-container" id="confetti-container"></div>
+        <div id="winner-message-area"></div>
+        <button id="reset-button" class="reset-button hidden">Play Again?</button>
+    </div>
+
+    <div id="donkey-flash">Donkey!!!</div>
+
+    <script>
+        // --- Game Setup ---
+        const gameBoard = document.getElementById('game-board');
+        const messageArea = document.getElementById('message-area');
+        const effectOverlay = document.getElementById('effect-overlay');
+        const wahooText = document.getElementById('wahoo-text');
+        const confettiContainer = document.getElementById('confetti-container');
+        const winnerMessageArea = document.getElementById('winner-message-area');
+        const resetButton = document.getElementById('reset-button');
+        const timerDisplay = document.getElementById('timer');
+        const scoreDisplay = document.getElementById('score');
+        const donkeyFlash = document.getElementById('donkey-flash');
+
+        // Emojis for the cards (10 pairs = 20 cards) - SHREK THEME
+        const emojis = ['🧅', '👑', '🐴', '👢', '🍪', '🐉', '💚', '✨', '🏰', '😠']; // <-- Updated Emojis
+        // Key: 🧅(Shrek), 👑(Fiona), 🐴(Donkey), 👢(Puss), 🍪(Gingy), 🐉(Dragon), 💚(Ogre Green), ✨(Magic), 🏰(Castle), 😠(Farquaad/Rumpel)
+        let cards = [...emojis, ...emojis]; // Duplicate emojis to create pairs
+
+        let flippedCards = []; // Stores the two currently flipped cards
+        let matchedPairs = 0; // Counter for matched pairs
+        let lockBoard = false; // Prevents clicking more cards during checks/animations
+        let gameWon = false; // Flag to track if the game is won
+
+        // --- Timer and Score Variables ---
+        let timerInterval;
+        let seconds = 0;
+        let score = 1000;
+
+        // --- Game Functions ---
+
+        // Shuffle function (Fisher-Yates Algorithm)
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+            }
+            return array;
+        }
+
+        // Create Card HTML
+        function createCardElement(emoji) {
+            const card = document.createElement('div');
+            card.classList.add('card');
+            card.dataset.emoji = emoji; // Store emoji data on the element
+
+            // Card Front (visible initially)
+            const cardFront = document.createElement('div');
+            cardFront.classList.add('card-face', 'card-front');
+
+            // Card Back (with emoji, hidden initially)
+            const cardBack = document.createElement('div');
+            cardBack.classList.add('card-face', 'card-back');
+            cardBack.textContent = emoji;
+
+            card.appendChild(cardFront);
+            card.appendChild(cardBack);
+
+            // Add click listener to each card
+            card.addEventListener('click', handleCardClick);
+
+            return card;
+        }
+
+        // Handle Card Click Logic
+        function handleCardClick() {
+            // Ignore clicks if board is locked, card is already flipped, or game is won
+            if (lockBoard || this.classList.contains('is-flipped') || gameWon) {
+                return;
+            }
+
+            this.classList.add('is-flipped'); // Flip the card
+            flippedCards.push(this);
+
+            // Check if two cards are flipped
+            if (flippedCards.length === 2) {
+                lockBoard = true; // Lock the board while checking
+                messageArea.textContent = "Checking...";
+                checkForMatch();
+            } else {
+                 messageArea.textContent = "Select one more card";
+            }
+        }
+
+        // Check if the two flipped cards match
+        function checkForMatch() {
+            const [card1, card2] = flippedCards;
+            const isMatch = card1.dataset.emoji === card2.dataset.emoji;
+
+            if (isMatch) {
+                // --- Match Found ---
+                matchedPairs++;
+                messageArea.textContent = "Match found!"; // Could change this too e.g., "Ogre-whelmed!"
+                showWahooEffect(); // Show "Wahoo!!!" effect
+                flashBackground(); // Flash background green
+                // Disable click listeners for matched cards
+                card1.removeEventListener('click', handleCardClick);
+                card2.removeEventListener('click', handleCardClick);
+                resetBoardState(); // Reset flipped cards array, unlock board
+
+                // Check for win condition
+                if (matchedPairs === emojis.length) {
+                    // Ensure winGame is called only once
+                    if (!gameWon) {
+                        winGame();
+                    }
+                }
+            } else {
+                // --- No Match ---
+                messageArea.textContent = "Try again :("; // Could change this e.g., "Not in my swamp!"
+                showDonkeyFlash(); // Show "Donkey!!!" flash
+                // Wait a bit before flipping back
+                setTimeout(() => {
+                    card1.classList.remove('is-flipped');
+                    card2.classList.remove('is-flipped');
+                    resetBoardState(); // Reset flipped cards array, unlock board
+                }, 1000); // 1 second delay
+            }
+        }
+
+        // Show "Wahoo!!!" effect
+        function showWahooEffect() {
+            effectOverlay.style.opacity = '1';
+            wahooText.style.animation = 'none'; // Reset animation
+            void wahooText.offsetWidth; // Trigger reflow to restart animation
+            // --- MODIFIED JAVASCRIPT: Apply the animation with the NEW duration ---
+            wahooText.style.animation = 'burst 1.6s ease-out forwards';
+
+            // --- MODIFIED JAVASCRIPT: Hide overlay after the LONGER animation completes ---
+            setTimeout(() => {
+                effectOverlay.style.opacity = '0';
+            }, 1700); // 1600ms + 100ms buffer
+        }
+
+        // Flash game board background green (Using a slightly different green)
+        function flashBackground() {
+            gameBoard.style.backgroundColor = '#90ee90'; // LightGreen
+            setTimeout(() => {
+                gameBoard.style.backgroundColor = '#c1e1c1'; // Back to lighter swamp green
+            }, 400); // Duration of the flash
+        }
+
+        // Show "Donkey!!!" flash
+        function showDonkeyFlash() {
+            donkeyFlash.style.display = 'block';
+            setTimeout(() => {
+                donkeyFlash.style.display = 'none';
+            }, 800); // Duration of the flash
+        }
+
+
+        // Reset flipped cards array and unlock board
+        function resetBoardState() {
+            flippedCards = [];
+            lockBoard = false;
+             // Update message only if game is not won
+            if (!gameWon) {
+                // Set message back to default after a short delay
+                setTimeout(() => {
+                    // Check if game is won before resetting message
+                    if (!gameWon) {
+                        messageArea.textContent = "Select two cards";
+                    }
+                }, 1100); // Delay slightly longer than flip back
+            }
+        }
+
+        // Handle Game Win
+        function winGame() {
+            console.log("Win condition met!"); // Add console log for debugging
+            gameWon = true; // Set game won flag
+            clearInterval(timerInterval); // Stop the timer
+            messageArea.textContent = ""; // Clear the regular message
+            // *** Winner Message Below ***
+            winnerMessageArea.innerHTML = '<div class="winner-message">GO COUGS!!!!</div>'; // Kept your custom message
+            startConfetti();
+            resetButton.classList.remove('hidden'); // Show the reset button
+            lockBoard = true; // Keep board locked after win
+        }
+
+        // --- Timer Functions ---
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                seconds++;
+                timerDisplay.textContent = `Time: ${seconds}s`;
+                decreaseScore();
+            }, 1000);
+        }
+
+        // --- Score Functions ---
+        function decreaseScore() {
+            if (score > 0) {
+                score--;
+                scoreDisplay.textContent = `Score: ${score}`;
+            } else if (!gameWon) {
+                // Optional: Handle game over if score reaches 0
+                messageArea.textContent = "Time's up! You ran out of score!";
+                gameWon = true;
+                clearInterval(timerInterval);
+                lockBoard = true;
+                resetButton.classList.remove('hidden');
+            }
+        }
+
+        // --- Confetti Effect --- (Using swampy/Shrek colors)
+        function startConfetti() {
+            const colors = ['#556b2f', '#8fbc8f', '#f5f5dc', '#d2691e', '#daa520', '#ffffff']; // Olive, DarkSeaGreen, Beige, Chocolate, Goldenrod, White
+            for (let i = 0; i < 100; i++) { // Create 100 confetti pieces
+                createConfettiPiece(colors);
+            }
+        }
+
+        function createConfettiPiece(colors) {
+            const confetti = document.createElement('div');
+            confetti.classList.add('confetti');
+            confetti.style.left = Math.random() * 100 + 'vw'; // Random horizontal start
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.animationDuration = (Math.random() * 3 + 3) + 's'; // Random duration (3-6s)
+            confetti.style.animationDelay = Math.random() * 2 + 's'; // Random start delay
+            // Make some confetti look like leaves/onions? (rectangles)
+            if (Math.random() > 0.7) {
+                 confetti.style.width = '15px';
+                 confetti.style.height = '8px';
+                 confetti.style.borderRadius = '40% 10%';
+            } else {
+                 confetti.style.width = '10px';
+                 confetti.style.height = '10px';
+                 confetti.style.borderRadius = '2px';
+            }
+
+
+            confettiContainer.appendChild(confetti);
+
+            // Remove confetti element after animation ends to prevent buildup
+            confetti.addEventListener('animationend', () => {
+                confetti.remove();
+            });
+        }
+
+        // Reset Game Function
+        function resetGame() {
+            gameWon = false;
+            matchedPairs = 0;
+            lockBoard = false;
+            flippedCards = [];
+            gameBoard.innerHTML = ''; // Clear existing cards
+            confettiContainer.innerHTML = ''; // Clear confetti
+            winnerMessageArea.innerHTML = ''; // Clear winner message
+            resetButton.classList.add('hidden'); // Hide reset button
+            messageArea.textContent = "Select two cards";
+            gameBoard.style.backgroundColor = '#c1e1c1'; // Reset board color
+
+            // Reset timer and score
+            clearInterval(timerInterval);
+            seconds = 0;
+            score = 1000;
+            timerDisplay.textContent = `Time: ${seconds}s`;
+            scoreDisplay.textContent = `Score: ${score}`;
+
+            initializeGame(); // Re-initialize the game
+        }
+
+
+        // Initialize Game on Load
+        function initializeGame() {
+            cards = shuffle([...emojis, ...emojis]); // Shuffle the cards
+            // Create and add card elements to the board
+            cards.forEach(emoji => {
+                const cardElement = createCardElement(emoji);
+                gameBoard.appendChild(cardElement);
+            });
+             // Ensure message area is reset visually
+            messageArea.textContent = "Select two cards";
+            winnerMessageArea.innerHTML = '';
+            resetButton.classList.add('hidden');
+
+            // Start the timer when the game initializes
+            seconds = 0;
+            score = 1000;
+            timerDisplay.textContent = `Time: ${seconds}s`;
+            scoreDisplay.textContent = `Score: ${score}`;
+            startTimer();
+        }
+
+        // --- Event Listeners ---
+        resetButton.addEventListener('click', resetGame);
+
+        // --- Start Game ---
+         window.onload = initializeGame; // Initialize when the page loads
+
+    </script>
+</body>
+</html>
